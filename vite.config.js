@@ -7,5 +7,5 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: '/ConversorDeMoneda',
   plugins: [react(), tailwindcss()],
-  base: 'https//j-cvalencia.github.io/ConversorDeDivisa'
+  base: '/ConversorDeDivisa/'
 })
