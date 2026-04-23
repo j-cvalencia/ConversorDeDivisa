@@ -1,125 +1,149 @@
 import { useEffect, useState } from 'react';
-import './index.css';
+
+const opciones = [
+  { codigo: 'USD', nombre: 'Dólar estadounidense' },
+  { codigo: 'COP', nombre: 'Peso colombiano' },
+  { codigo: 'EUR', nombre: 'Euro' },
+  { codigo: 'MXN', nombre: 'Peso mexicano' },
+  { codigo: 'ARS', nombre: 'Peso argentino' },
+  { codigo: 'CLP', nombre: 'Peso chileno' },
+  { codigo: 'PEN', nombre: 'Sol peruano' },
+  { codigo: 'BRL', nombre: 'Real brasileño' },
+  { codigo: 'VES', nombre: 'Bolívar venezolano' },
+  { codigo: 'CAD', nombre: 'Dólar canadiense' },
+  { codigo: 'BOB', nombre: 'Boliviano' },
+  { codigo: 'PYG', nombre: 'Guaraní paraguayo' },
+  { codigo: 'UYU', nombre: 'Peso uruguayo' },
+  { codigo: 'GBP', nombre: 'Libra esterlina' },
+  { codigo: 'CHF', nombre: 'Franco suizo' },
+];
 
 function App() {
-  const opciones = [
-    { codigo: 'USD', nombre: 'Dólar estadounidense' },
-    { codigo: 'COP', nombre: 'Peso colombiano' },
-    { codigo: 'EUR', nombre: 'Euro' },
-    { codigo: 'MXN', nombre: 'Peso mexicano' },
-    { codigo: 'ARS', nombre: 'Peso argentino' },
-    { codigo: 'CLP', nombre: 'Peso chileno' },
-    { codigo: 'PEN', nombre: 'Sol peruano' },
-    { codigo: 'BRL', nombre: 'Real brasileño' },
-    { codigo: 'VES', nombre: 'Bolívar venezolano' },
-    { codigo: 'CAD', nombre: 'Dólar canadiense' },
-    { codigo: 'BOB', nombre: 'Boliviano' },
-    { codigo: 'PYG', nombre: 'Guaraní paraguayo' },
-    { codigo: 'UYU', nombre: 'Peso uruguayo' },
-    { codigo: 'GBP', nombre: 'Libra esterlina' },
-    { codigo: 'CHF', nombre: 'Franco suizo' }
-  ];
-
-  const [valorInputAConvertir, setValorInputAConvertir] = useState(); 
-  const [valorInputConvertida, setValorInputConvertida] = useState();
-  const [datos, setDatos] = useState();
-  const [tituloConversion,setTituloConversion] = useState('CONVERSOR DE DIVISAS');
-
-  const manejarInput = (e) => {
-    setValorInputAConvertir(e.target.value);
-  }
-
-  const llamarApi = async () => {
-    const respuesta = await fetch('https://v6.exchangerate-api.com/v6/8fa39d2317e2e8b92861d620/latest/USD');
-    const datos = await respuesta.json();
-    setDatos(datos.conversion_rates);
-  }
+  const [valorFrom, setValorFrom] = useState('');
+  const [valorTo, setValorTo] = useState('');
+  const [monedaFrom, setMonedaFrom] = useState('USD');
+  const [monedaTo, setMonedaTo] = useState('COP');
+  const [rates, setRates] = useState(null);
+  const [tasa, setTasa] = useState('');
+  const [titulo, setTitulo] = useState('¿Cuánto quieres convertir?');
 
   useEffect(() => {
-    llamarApi();
-  }, [])
+    fetch('https://v6.exchangerate-api.com/v6/8fa39d2317e2e8b92861d620/latest/USD')
+      .then(r => r.json())
+      .then(d => setRates(d.conversion_rates));
+  }, []);
 
-  const convertirMoneda = (e) => {
+  const convertir = (e) => {
     e.preventDefault();
-    
-    let nombreMonedaAConvertir = e.target.children[0].children[1].value;
-    let nombreMonedaConvertida = e.target.children[2].children[1].value;
-    
-    setValorInputConvertida((valorInputAConvertir * datos[nombreMonedaConvertida] / datos[nombreMonedaAConvertir]).toFixed(2));
+    if (!rates || !valorFrom) return;
 
-    opciones.forEach((opcion) => {
-      if (nombreMonedaAConvertir === opcion.codigo) {
-        nombreMonedaAConvertir = opcion.nombre;
-      }
-    })
+    const resultado = (valorFrom * rates[monedaTo] / rates[monedaFrom]).toFixed(2);
+    setValorTo(resultado);
+    setTitulo(`${monedaFrom} → ${monedaTo}`);
+    setTasa(`1 ${monedaFrom} = ${(rates[monedaTo] / rates[monedaFrom]).toFixed(2)} ${monedaTo}`);
+  };
 
-    opciones.forEach((opcion) => {
-      if (nombreMonedaConvertida === opcion.codigo) {
-        nombreMonedaConvertida = opcion.nombre;
-      }
-    })
-
-    setTituloConversion(`Convertir de ${nombreMonedaAConvertir} a ${nombreMonedaConvertida}`);
-  }
-  
   return (
-    <div className="w-full h-screen bg-blue-800 flex items-center justify-center relative">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-white text-center absolute top-8">
-        {tituloConversion}
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-700 to-blue-800 flex flex-col items-center justify-center p-6 gap-8">
 
-      <form 
-        onSubmit={convertirMoneda} 
-        className="w-[95%] md:w-4/5 lg:w-3/5 h-[60vh] md:h-[50vh] bg-white rounded-2xl flex flex-col md:flex-row justify-center md:justify-around items-center shadow-[0px_5px_15px_black] relative p-4"
+      {/* Encabezado */}
+      <div className="text-center">
+        <p className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-2">
+          Conversor de divisas
+        </p>
+        <h1 className="text-white text-2xl md:text-3xl font-semibold tracking-tight">
+          {titulo}
+        </h1>
+      </div>
+
+      {/* Card */}
+      <form
+        onSubmit={convertir}
+        className="w-full max-w-lg bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-7 flex flex-col gap-5 shadow-xl"
       >
-        <div className="w-[90%] md:w-[45%] h-[8vh] md:h-[10vh] flex border-2 border-black rounded-2xl overflow-hidden">
-          <input 
-            type="number" 
-            id="aConvertir" 
-            value={valorInputAConvertir || ""} 
-            onChange={manejarInput} 
-            placeholder="Digite el valor"
-            className="w-3/5 md:w-2/3 text-xl md:text-2xl text-center outline-none border-none"
-          />
-          <select 
-            id="seleccionMonedaAConvertir"
-            className="w-2/5 md:w-1/3 text-xl md:text-2xl text-center outline-none border-none bg-gray-300"
-          >
-            {opciones.map((opcion,index) => (
-              <option key={index} value={opcion.codigo}>{opcion.codigo}</option>
-            ))}
-          </select>
+        {/* Inputs */}
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+
+          {/* Desde */}
+          <div className="w-full min-w-0 flex flex-col gap-2">
+            <label className="text-white/55 text-xs font-semibold tracking-widest uppercase">
+              Desde
+            </label>
+            <div className="flex w-full rounded-xl overflow-hidden bg-white/10 border border-white/20 focus-within:border-white/50 focus-within:bg-white/15 transition">
+              <input
+                type="number"
+                value={valorFrom}
+                onChange={e => setValorFrom(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="any"
+                className="flex-1 bg-transparent text-white text-lg font-medium placeholder-white/30 outline-none px-4 py-3 min-w-0"
+              />
+              <select
+                value={monedaFrom}
+                onChange={e => setMonedaFrom(e.target.value)}
+                className="bg-transparent text-white text-sm font-semibold outline-none px-3 border-l border-white/15 cursor-pointer"
+              >
+                {opciones.map(op => (
+                  <option key={op.codigo} value={op.codigo} className="bg-blue-900">
+                    {op.codigo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Flecha */}
+          <div className="text-white/40 text-2xl rotate-90 md:rotate-0 md:mt-5 flex-shrink-0">
+            ⇄
+          </div>
+
+          {/* Hacia */}
+          <div className="w-full min-w-0 flex flex-col gap-2">
+            <label className="text-white/55 text-xs font-semibold tracking-widest uppercase">
+              Hacia
+            </label>
+            <div className="flex w-full rounded-xl overflow-hidden bg-white/8 border border-white/20 transition">
+              <input
+                type="number"
+                value={valorTo}
+                disabled
+                placeholder="—"
+                className="flex-1 bg-transparent text-white/70 text-lg font-medium placeholder-white/25 outline-none px-4 py-3 min-w-0"
+              />
+              <select
+                value={monedaTo}
+                onChange={e => setMonedaTo(e.target.value)}
+                className="bg-transparent text-white text-sm font-semibold outline-none px-3 border-l border-white/15 cursor-pointer"
+              >
+                {opciones.map(op => (
+                  <option key={op.codigo} value={op.codigo} className="bg-blue-900">
+                    {op.codigo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
-        <i className="fa-solid fa-right-long text-xl rotate-90 md:rotate-0 md:text-2xl my-5"></i>
+        {/* Divisor */}
+        <div className="h-px bg-white/10" />
 
-        <div className="w-[90%] md:w-[45%] h-[8vh] md:h-[10vh] flex border-2 border-black rounded-2xl overflow-hidden">
-          <input 
-            type="number" 
-            id="Convertida"  
-            value={valorInputConvertida || ""} 
-            disabled
-            className="w-3/5 md:w-2/3 text-xl md:text-2xl text-center outline-none border-none bg-gray-100"
-          />
-          <select 
-            id="seleccionMonedaConvertir"
-            className="w-2/5 md:w-1/3 text-xl md:text-2xl text-center outline-none border-none bg-gray-300"
-          >
-            {opciones.map((opcion,index) => (
-              <option key={index} value={opcion.codigo}>{opcion.codigo}</option>
-            ))}
-          </select>
-        </div>
-
-        <button 
+        {/* Botón */}
+        <button
           type="submit"
-          className="w-3/5 md:w-1/2 h-12 md:h-16 text-xl font-bold cursor-pointer border-2 border-blue-800 rounded-full bg-blue-800 hover:bg-blue-900 text-white absolute bottom-8 active:text-gray-400"
+          className="w-full py-3.5 bg-white text-blue-700 text-sm font-bold tracking-widest uppercase rounded-xl hover:bg-blue-50 active:scale-95 transition"
         >
-          CONVERTIR
+          Convertir
         </button>
+
+        {/* Tasa */}
+        <p className="text-center text-white/40 text-xs">
+          {tasa || 'Tasas actualizadas en tiempo real'}
+        </p>
       </form>
     </div>
-  )
+  );
 }
 
 export default App;
